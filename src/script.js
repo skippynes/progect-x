@@ -1,5 +1,6 @@
 import * as THREE from 'three'; 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import * as dat from 'lil-gui'; 
 
 import './style.css'; 
 
@@ -11,6 +12,7 @@ const canvas = document.querySelector('canvas');
  
 //scene.background = new THREE.Color(0x000000); 
 
+const gui = new dat.GUI();
 
 var clock = new THREE.Clock(); 
 
@@ -31,6 +33,12 @@ var axesHelper = new THREE.AxesHelper(100);
 var geometry = new THREE.SphereGeometry( 1, 32, 32);
 var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 var sphere = new THREE.Mesh( geometry, material );
+const geometry1 = new THREE.SphereGeometry( 1, 64, 64);
+const material1 = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+
+gui.addColor(material, 'color');
+gui.addColor(material1, 'color');
+
 
 scene.add( sphere );
 scene.add( axesHelper ); 
@@ -38,21 +46,14 @@ scene.add( axesHelper );
 scene.position.z = 1;
 camera.position.z = 25;
 
+const q = 1.6e-19; 
+let m = 9.1e-31; 
+let v = 3e6;
+let b = 0.001;
+let cos = 0.86;
+let sin = 0.5;
 
-
-const MAGNETICFIELD = { 
-      B: 0.001, 
-}; 
-
-const ELECTRON = {
-      q: -1.6 * 10 ** -19,
-      m: 9.1 * 10 ** -31, 
-      R: 10,
-      r: 3*3
-}; 
-
-            
-function render() {
+function render() { // обновление сцены и камеры
         requestAnimationFrame( render );
         renderer.setClearColor(0x000000, 0); 
         
@@ -61,20 +62,27 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function movement() {
+const rad = (((m * v*sin)/q*b)*1e9); 
+const h = (((2*3,14*m*v*cos)/q*b)*1e7); 
+
+function movement() { // движение частицы во всех координатных осях и траектория ее движения
       requestAnimationFrame( movement ); 
+      const sphere1 = new THREE.Mesh( geometry1, material1 );
+      scene.add( sphere1 );
   var elapsedTime = clock.getElapsedTime(); 
-  sphere.position.x = 40*Math.cos(elapsedTime); 
-  sphere.position.y = 10; 
-  sphere.position.z = 40*Math.sin(elapsedTime);
+  sphere.position.x = rad*Math.cos(elapsedTime); 
+  sphere.position.y = h*elapsedTime; 
+  sphere.position.z = rad*Math.sin(elapsedTime);
+  sphere1.position.x = rad*Math.cos(elapsedTime); 
+  sphere1.position.y = h*elapsedTime; 
+  sphere1.position.z = rad*Math.sin(elapsedTime);
 
 } 
 
-
-movement(); 
+setTimeout(movement, 2000);
 render(); 
 
-window.addEventListener('resize', () => {
+window.addEventListener('resize', () => { // растигивание окна браузера под все форматы
       sizes.width = window.innerWidth; 
       sizes.height = window.innerHeight; 
       
